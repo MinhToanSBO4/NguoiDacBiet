@@ -174,94 +174,82 @@ html{
     heartRains: []
   };
 
-  interval = 30; // Typing speed
-
-  async progressiveShowStyle(n = 0) {
-    const { interval, fullStyle } = this;
-    
-    const showStyle = i => new Promise((resolve) => {
-      const style = fullStyle[n];
-      const char = style[i];
-      
-      if (!style || !char) {
-        resolve();
-        return;
-      }
-      
-      let { currentStyleCode } = this.state;
-      currentStyleCode += char;
-      
-      this.setState({ currentStyleCode });
-      
-      if (char === '\n' && this.styleEditor) {
-        this.styleEditor.toBottom();
-      }
-      
-      setTimeout(() => {
-        resolve(showStyle(i + 1));
-      }, interval);
-    });
-    
-    return showStyle(0);
-  }
-
-  async componentDidMount() {
-    // Add Google Font for improved typography
-    const link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-    
-    await this.progressiveShowStyle(0);
-    this.setState({ finished: true });
-    this.rain();
-  }
-
-  saveStyleEditorRef = child => this.styleEditor = child;
-  
-  rain = () => {
-    let { heartRains } = this.state;
-    const rainNum = 30;
-    const stayTime = rainNum * 200 + 5000; // Longer display time
-    const time = (new Date()).getTime();
-    
-    if (!heartRains.length || (time - heartRains[heartRains.length - 1].time > (stayTime / 2))) {
-      heartRains.push({ time, rainNum });
-      this.setState({ heartRains });
-      
-      setTimeout(() => {
-        this.removeRain(time);
-      }, stayTime);
+    state = {
+        currentStyleCode: '',
+        finished: false,
+        heartRains: []
     }
-  };
 
-  removeRain(time) {
-    let { heartRains } = this.state;
-    heartRains = heartRains.filter(item => item.time !== time);
-    this.setState({ heartRains });
-  }
+    interval = 30;
+    // interval = 0;
 
-  render() {
-    const { currentStyleCode, finished, heartRains } = this.state;
+    async progressiveShowStyle(n = 0) {
+        const {
+            interval,
+            fullStyle
+        } = this;
+        const showStyle = i => new Promise((resolve) => {
+            const style = fullStyle[n];
+            const char = style[i];
+            if (!style || !char) {
+                resolve();
+                return;
+            }
+            let {
+                currentStyleCode
+            } = this.state;
+            currentStyleCode += char;
+            this.setState({
+                currentStyleCode
+            });
+            if (char === '\n' && this.styleEditor) {
+                this.styleEditor.toBottom();
+            }
+            setTimeout(() => {
+                resolve(showStyle(i + 1))
+            }, interval);
+        });
+        return showStyle(0);
+    }
+
+    async componentDidMount() {
+        await this.progressiveShowStyle(0);
+        this.setState({finished: true});
+        this.rain();
+    }
+
+    saveStyleEditorRef = child => this.styleEditor = child;
     
-    return (
-      <div className="app-container">
-        <div style={{
-          display: isPc ? 'flex' : '',
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: '20px'
-        }}>
-          <StyleEditor 
-            ref={this.saveStyleEditorRef} 
-            code={currentStyleCode}
-          />
-          <Heart click={finished ? this.rain : null} />
-        </div>
-        {heartRains.map(item => (
-          <HeartRain num={item.rainNum} key={item.time} />
-        ))}
-      </div>
-    );
-  }
+    rain = () => {
+        let { heartRains } = this.state;
+        const rainNum = 30;
+        const stayTime = rainNum * 200 + 1000 + 4000;
+        const time = (new Date()).getTime();
+        if (!heartRains.length || (time - heartRains[heartRains.length - 1].time > (stayTime / 2))) {
+            heartRains.push({time, rainNum});
+            this.setState({heartRains});
+            setTimeout(() => {
+                this.removeRain(time);
+            }, stayTime);
+        }
+    }
+
+    removeRain(time) {
+        let { heartRains } = this.state;
+        heartRains = heartRains.filter(item => item.time !== time);
+        this.setState({heartRains});
+    }
+
+    render() {
+        const { currentStyleCode, finished, heartRains } = this.state;
+        return <div>
+            <div style = {{display: isPc ? 'flex' : ''}}>
+                <StyleEditor ref={this.saveStyleEditorRef} code={currentStyleCode}/>
+                <Heart click={finished ? this.rain: null}/>
+            </div>
+            {
+                heartRains.map(item => <HeartRain num={item.rainNum} key={item.time}/>)
+            }
+        </div>;
+    }
 }
